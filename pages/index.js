@@ -1,5 +1,6 @@
 import Head from 'next/head';
-import * as d3 from 'd3'
+import * as d3 from 'd3';
+import {event as currentEvent} from 'd3';
 import styles from '../styles/Home.module.css';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -37,6 +38,29 @@ function drawMap(svgRef, filterButton, rating) {
     .translate(offset);
   path = path.projection(projection);
 
+
+  //get draggable points A and B
+
+  var dragger = d3.drag()
+    .on("drag", (event, d) => {
+      d3.select("#pointA")
+        .attr("cx", event.x)
+        .attr("cy", event.y);
+      d3.select("#radiusA")
+        .attr("cx", event.x)
+        .attr("cy", event.y);
+    });
+  var dragger2 = d3.drag()
+    .on("drag", (event, d) => {
+      d3.select("#pointB")
+        .attr("cx", event.x)
+        .attr("cy", event.y);
+      d3.select("#radiusB")
+        .attr("cx", event.x)
+        .attr("cy", event.y);
+    });
+   
+  
 
   d3.json('/Bay_Area.json')
     .then((data) => {
@@ -127,6 +151,45 @@ function drawMap(svgRef, filterButton, rating) {
             .attr('opacity', 0)
             .remove()
         )
+
+      const radiusA = svg.append("circle")
+        .attr("cx", projection([-122.1430, 37.4419])[0])
+        .attr("cy", projection([-122.1430, 37.4419])[1])
+        .attr("r", 400)
+        .attr("fill", "red")
+        .attr('opacity', 0.3)
+        .attr("id", "radiusA")
+        .style("z-index", 0);
+      const radiusB = svg.append("circle")
+        .attr("cx", projection([-122.153, 37.452])[0])
+        .attr("cy", projection([-122.153, 37.452])[1])
+        .attr("r", 400)
+        .attr("fill", "blue")
+        .attr('opacity', 0.3)
+        .attr("id", "radiusB")
+        .style("z-index", 0);
+
+      const pointA = svg.append("circle")
+        .attr("cx", projection([-122.1430, 37.4419])[0])
+        .attr("cy", projection([-122.1430, 37.4419])[1])
+        .attr("r", 5)
+        .attr("fill", "red")
+        .attr("id", "pointA")
+        .attr("stroke", "black")
+        .style("z-index", 10)
+        .call(dragger);
+      const pointB = svg.append("circle")
+        .attr("cx", projection([-122.153, 37.452])[0])
+        .attr("cy", projection([-122.153, 37.452])[1])
+        .attr("r", 5)
+        .attr("fill", "blue")
+        .attr("id", "pointB")
+        .style("z-index", 10)
+        .attr("stroke", "black")
+        .call(dragger2);
+
+      
+    
       console.log("end of csv");
     })
     .catch((err) => {
