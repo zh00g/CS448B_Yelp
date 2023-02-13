@@ -14,6 +14,8 @@ function parseCoord(coord) {
   return idx;
 }
 
+
+
 function drawMap(svgRef, filterButton, rating) {
   let width = 1200;
   let height = 1200;
@@ -41,25 +43,16 @@ function drawMap(svgRef, filterButton, rating) {
 
   //get draggable points A and B
 
-  var dragger = d3.drag()
-    .on("drag", (event, d) => {
-      d3.select("#pointA")
-        .attr("cx", event.x)
-        .attr("cy", event.y);
-      d3.select("#radiusA")
-        .attr("cx", event.x)
-        .attr("cy", event.y);
-    });
-  var dragger2 = d3.drag()
-    .on("drag", (event, d) => {
-      d3.select("#pointB")
-        .attr("cx", event.x)
-        .attr("cy", event.y);
-      d3.select("#radiusB")
-        .attr("cx", event.x)
-        .attr("cy", event.y);
-    });
-   
+  let locA = [600,600];
+  const radiusA = svg.append("circle")
+  .attr("cx", locA[0])
+  .attr("cy", locA[1])
+  .attr("r", 400)
+  .attr("fill", "red")
+  .attr('opacity', 0.3)
+  .attr("id", "radiusA")
+  .style("z-index", 50);
+
   
 
   d3.json('/Bay_Area.json')
@@ -142,6 +135,9 @@ function drawMap(svgRef, filterButton, rating) {
             })
             .on("mouseleave", (data, event) => {
               return tooltip.style("visibility", "hidden");
+            })
+            .on("centerMove", function(d) {
+              d3.select(this).attr("fill", inBothCircle(d));
             }),
           update => update,
           // Add code to customize how countries exit the scene.
@@ -151,42 +147,6 @@ function drawMap(svgRef, filterButton, rating) {
             .attr('opacity', 0)
             .remove()
         )
-
-      const radiusA = svg.append("circle")
-        .attr("cx", projection([-122.1430, 37.4419])[0])
-        .attr("cy", projection([-122.1430, 37.4419])[1])
-        .attr("r", 400)
-        .attr("fill", "red")
-        .attr('opacity', 0.3)
-        .attr("id", "radiusA")
-        .style("z-index", 0);
-      const radiusB = svg.append("circle")
-        .attr("cx", projection([-122.153, 37.452])[0])
-        .attr("cy", projection([-122.153, 37.452])[1])
-        .attr("r", 400)
-        .attr("fill", "blue")
-        .attr('opacity', 0.3)
-        .attr("id", "radiusB")
-        .style("z-index", 0);
-
-      const pointA = svg.append("circle")
-        .attr("cx", projection([-122.1430, 37.4419])[0])
-        .attr("cy", projection([-122.1430, 37.4419])[1])
-        .attr("r", 5)
-        .attr("fill", "red")
-        .attr("id", "pointA")
-        .attr("stroke", "black")
-        .style("z-index", 10)
-        .call(dragger);
-      const pointB = svg.append("circle")
-        .attr("cx", projection([-122.153, 37.452])[0])
-        .attr("cy", projection([-122.153, 37.452])[1])
-        .attr("r", 5)
-        .attr("fill", "blue")
-        .attr("id", "pointB")
-        .style("z-index", 10)
-        .attr("stroke", "black")
-        .call(dragger2);
 
       
     
@@ -198,9 +158,100 @@ function drawMap(svgRef, filterButton, rating) {
     });
 }
 
+function updateMap(svgRef, locA, locB) {
+  console.log("shit and balls");
+  //define l
+  const svg = d3.select(svgRef.current).select("svg");
+
+
+  var dragger = d3.drag()
+    .on("drag", (event, d) => {
+      d3.select("#pointA")
+        .attr("cx", event.x)
+        .attr("cy", event.y);
+      locA = [event.x, event.y];
+      setLocA([event.x, event.y]);
+      d3.select("#radiusA")
+        .attr("cx", event.x)
+        .attr("cy", event.y);
+    });
+  var dragger2 = d3.drag()
+    .on("drag", (event, d) => {
+      d3.select("#pointB")
+        .attr("cx", event.x)
+        .attr("cy", event.y);
+      locB = [event.x, event.y];
+      setLocB([event.x, event.y]);
+      d3.select("#radiusB")
+        .attr("cx", event.x)
+        .attr("cy", event.y);
+    });
+  
+  const radiusA = svg.append("circle")
+    .attr("cx", locA[0])
+    .attr("cy", locA[1])
+    .attr("r", 400)
+    .attr("fill", "red")
+    .attr('opacity', 0.3)
+    .attr("id", "radiusA")
+    .style("z-index", 25);
+  const radiusB = svg.append("circle")
+    .attr("cx", locB[0])
+    .attr("cy", locB[1])
+    .attr("r", 400)
+    .attr("fill", "blue")
+    .attr('opacity', 0.3)
+    .attr("id", "radiusB")
+    .style("z-index", 0);
+
+  const pointA = svg.append("circle")
+    .attr("cx", locA[0])
+    .attr("cy", locA[1])
+    .attr("r", 5)
+    .attr("fill", "red")
+    .attr("id", "pointA")
+    .attr("stroke", "black")
+    .style("z-index", 10)
+    .call(dragger);
+  const pointB = svg.append("circle")
+    .attr("cx", locB[0])
+    .attr("cy", locB[1])
+    .attr("r", 5)
+    .attr("fill", "blue")
+    .attr("id", "pointB")
+    .style("z-index", 10)
+    .attr("stroke", "black")
+    .call(dragger2);
+  
+  /**
+  svg.select("#circleGroup").selectAll('.data-point')
+  .style('fill', d => {
+    const distanceToLocA = Math.sqrt(Math.pow(d.x - locA.x, 2) + Math.pow(d.y - locA.y, 2));
+    const distanceToLocB = Math.sqrt(Math.pow(d.x - locB.x, 2) + Math.pow(d.y - locB.y, 2));
+    return (distanceToLocA >= 500 && distanceToLocB >= 500) ? 'black' : 'grey';
+  });
+  function inBothCircle(d) {
+    let idx = parseCoord(d.coordinates);
+    let long = d.coordinates.slice(idx + 1);
+    let lat = d.coordinates.slice(0, idx);
+    let cx = ([+long, +lat]);
+    let distA = Math.sqrt(Math.pow(projection(cx)[0] - locA[0],2) + Math.pow(projection(cx)[1] - locA[1],2));
+    let distB = Math.sqrt(Math.pow(projection(cx)[0] - locB[0],2) + Math.pow(projection(cx)[1] - locB[1],2));
+    if (distA >= radiusA && distB >= radiusB) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+  */
+}
+
 export default function Home() {
   const [filterButton, setFilterButton] = useState(true);
   const [rating, setRating] = useState("");
+  const [locA, setLocA] = useState([600,600]);
+  const [locB, setLocB] = useState([594,594]);
 
   const handleSlider = (event, newRating) => {
     if (newRating === 4) {
@@ -245,8 +296,14 @@ export default function Home() {
 
   const svg = useRef();
   useEffect(() => {
+    updateMap(svg, locA, locB);
+  },[locA, locB]);
+  
+  useEffect(() => {
     drawMap(svg, filterButton, rating);
   }, [rating]);
+
+
 
   // const handleFilter = () => {
   //   console.log("button pressed");
@@ -283,6 +340,8 @@ export default function Home() {
         </Box>
 
         <svg-container ref={svg}>
+        
+
         </svg-container>
 
       </main>
