@@ -14,7 +14,32 @@ function parseCoord(coord) {
   return idx;
 }
 
-function drawMap(svgRef, filterButton, rating) {
+function updateMap(svgRef, locA, locB) {
+    //get draggable points A and B
+  function inBothCircle(lon, lat) {
+    let cx = [lon, lat];
+    let A = locA;
+    let B = locB;   
+    let distA = Math.sqrt(Math.pow(cx[0] - A[0],2) + Math.pow(cx[1] - A[1],2));
+    let distB = Math.sqrt(Math.pow(cx[0] - B[0],2) + Math.pow(cx[1] - B[1],2));
+    if (distA < 400 && distB < 400) {
+      return 'red';
+    }
+    else {
+      return 'black';
+    }
+  }
+
+  if (d3.selectAll(".thedata")) {
+    d3.selectAll(".thedata").each(function() {
+      var x = d3.select(this).attr("cx");
+      var y = d3.select(this).attr("cy");
+      d3.select(this).style("fill", inBothCircle(x,y));
+    });
+  }
+}
+
+function drawMap(svgRef, filterButton, rating, locA, locB, dragger, dragger2) {
   let width = 1200;
   let height = 1200;
   if (filterButton === true) {
@@ -40,25 +65,20 @@ function drawMap(svgRef, filterButton, rating) {
 
 
   //get draggable points A and B
+  function inBothCircle(lon, lat) {
+    let cx = [lon, lat];
+    let A = locA;
+    let B = locB;   
+    let distA = Math.sqrt(Math.pow(cx[0] - A[0],2) + Math.pow(cx[1] - A[1],2));
+    let distB = Math.sqrt(Math.pow(cx[0] - B[0],2) + Math.pow(cx[1] - B[1],2));
+    if (distA < 400 && distB < 400) {
+      return 'red';
+    }
+    else {
+      return 'black';
+    }
+  }
 
-  var dragger = d3.drag()
-    .on("drag", (event, d) => {
-      d3.select("#pointA")
-        .attr("cx", event.x)
-        .attr("cy", event.y);
-      d3.select("#radiusA")
-        .attr("cx", event.x)
-        .attr("cy", event.y);
-    });
-  var dragger2 = d3.drag()
-    .on("drag", (event, d) => {
-      d3.select("#pointB")
-        .attr("cx", event.x)
-        .attr("cy", event.y);
-      d3.select("#radiusB")
-        .attr("cx", event.x)
-        .attr("cy", event.y);
-    });
    
   
 
@@ -126,7 +146,14 @@ function drawMap(svgRef, filterButton, rating) {
               return projection(cy)[1];
             })
             .attr("r", 1)
-            .style("fill", 'black')
+            .attr("class", "thedata")
+            .style("fill", (d) => {
+              let idx = parseCoord(d.coordinates);
+              let long = d.coordinates.slice(idx + 1);
+              let lat = d.coordinates.slice(0, idx);
+              let cx = projection([+long, +lat]);
+              return inBothCircle(cx[0], cx[1]);
+            })
             .attr("stroke-width", 1)
             .attr("fill-opacity", 0.6)
             .on("mouseover", (data, event) => {
@@ -153,25 +180,27 @@ function drawMap(svgRef, filterButton, rating) {
         )
 
       const radiusA = svg.append("circle")
-        .attr("cx", projection([-122.1430, 37.4419])[0])
-        .attr("cy", projection([-122.1430, 37.4419])[1])
+        .attr("cx", locA[0])
+        .attr("cy", locA[1])
         .attr("r", 400)
-        .attr("fill", "red")
-        .attr('opacity', 0.3)
+        .attr('opacity', 1)
         .attr("id", "radiusA")
-        .style("z-index", 0);
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .style("z-index", -1);
       const radiusB = svg.append("circle")
-        .attr("cx", projection([-122.153, 37.452])[0])
-        .attr("cy", projection([-122.153, 37.452])[1])
+        .attr("cx", locB[0])
+        .attr("cy", locB[1])
         .attr("r", 400)
-        .attr("fill", "blue")
-        .attr('opacity', 0.3)
+        .attr('opacity', 1)
         .attr("id", "radiusB")
-        .style("z-index", 0);
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .style("z-index", -1);
 
       const pointA = svg.append("circle")
-        .attr("cx", projection([-122.1430, 37.4419])[0])
-        .attr("cy", projection([-122.1430, 37.4419])[1])
+        .attr("cx", locA[0])
+        .attr("cy", locA[1])
         .attr("r", 5)
         .attr("fill", "red")
         .attr("id", "pointA")
@@ -179,8 +208,8 @@ function drawMap(svgRef, filterButton, rating) {
         .style("z-index", 10)
         .call(dragger);
       const pointB = svg.append("circle")
-        .attr("cx", projection([-122.153, 37.452])[0])
-        .attr("cy", projection([-122.153, 37.452])[1])
+        .attr("cx", locB[0])
+        .attr("cy", locB[1])
         .attr("r", 5)
         .attr("fill", "blue")
         .attr("id", "pointB")
@@ -201,6 +230,8 @@ function drawMap(svgRef, filterButton, rating) {
 export default function Home() {
   const [filterButton, setFilterButton] = useState(true);
   const [rating, setRating] = useState("");
+  const [locA, setLocA] = useState([600,600]);
+  const [locB, setLocB] = useState([594,594]);
 
   const handleSlider = (event, newRating) => {
     if (newRating === 4) {
@@ -243,10 +274,36 @@ export default function Home() {
     },
   ];
 
+  var dragger = d3.drag()
+  .on("drag", (event, d) => {
+    d3.select("#pointA")
+      .attr("cx", event.x)
+      .attr("cy", event.y);
+    setLocA([event.x, event.y]);
+    d3.select("#radiusA")
+      .attr("cx", event.x)
+      .attr("cy", event.y);
+    console.log("dragA");
+  });
+var dragger2 = d3.drag()
+  .on("drag", (event, d) => {
+    d3.select("#pointB")
+      .attr("cx", event.x)
+      .attr("cy", event.y);
+    setLocB([event.x, event.y]);
+    d3.select("#radiusB")
+      .attr("cx", event.x)
+      .attr("cy", event.y);
+    console.log("dragB");
+  });
+
   const svg = useRef();
   useEffect(() => {
-    drawMap(svg, filterButton, rating);
+    drawMap(svg, filterButton, rating, locA, locB, dragger, dragger2);
   }, [rating]);
+  useEffect(() => {
+    updateMap(svg, locA, locB);
+  }, [locA, locB])
 
   // const handleFilter = () => {
   //   console.log("button pressed");
