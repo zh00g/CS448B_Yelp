@@ -16,13 +16,13 @@ function parseCoord(coord) {
 
 function updateMap(svgRef, locA, locB) {
     //get draggable points A and B
-  function inBothCircle(lon, lat) {
+  function inBothCircle(lon, lat, radiusA, radiusB) {
     let cx = [lon, lat];
     let A = locA;
-    let B = locB;   
+    let B = locB; 
     let distA = Math.sqrt(Math.pow(cx[0] - A[0],2) + Math.pow(cx[1] - A[1],2));
     let distB = Math.sqrt(Math.pow(cx[0] - B[0],2) + Math.pow(cx[1] - B[1],2));
-    if (distA < 400 && distB < 400) {
+    if (distA < radiusA && distB < radiusB) {
       return 'red';
     }
     else {
@@ -34,12 +34,14 @@ function updateMap(svgRef, locA, locB) {
     d3.selectAll(".thedata").each(function() {
       var x = d3.select(this).attr("cx");
       var y = d3.select(this).attr("cy");
-      d3.select(this).style("fill", inBothCircle(x,y));
+      var radB = d3.select("#radiusB").attr("r");
+      var radA = d3.select("#radiusA").attr("r");
+      d3.select(this).style("fill", inBothCircle(x,y, radA, radB));
     });
   }
 }
 
-function drawMap(svgRef, filterButton, rating, locA, locB, dragger, dragger2) {
+function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, dragger2, draggerA, draggerB) {
   let width = 1200;
   let height = 1200;
   if (filterButton === true) {
@@ -182,21 +184,23 @@ function drawMap(svgRef, filterButton, rating, locA, locB, dragger, dragger2) {
       const radiusA = svg.append("circle")
         .attr("cx", locA[0])
         .attr("cy", locA[1])
-        .attr("r", 400)
+        .attr("r", radA)
         .attr('opacity', 1)
         .attr("id", "radiusA")
         .attr("fill", "none")
         .attr("stroke", "black")
-        .style("z-index", -1);
+        .style("z-index", -1)
+        .call(draggerA);
       const radiusB = svg.append("circle")
         .attr("cx", locB[0])
         .attr("cy", locB[1])
-        .attr("r", 400)
+        .attr("r", radB)
         .attr('opacity', 1)
         .attr("id", "radiusB")
         .attr("fill", "none")
         .attr("stroke", "black")
-        .style("z-index", -1);
+        .style("z-index", -1)
+        .call(draggerB);
 
       const pointA = svg.append("circle")
         .attr("cx", locA[0])
@@ -232,6 +236,8 @@ export default function Home() {
   const [rating, setRating] = useState("");
   const [locA, setLocA] = useState([600,600]);
   const [locB, setLocB] = useState([594,594]);
+  const [radiusA, setRadiusA] = useState(400);
+  const [radiusB, setRadiusB] = useState(400);
 
   const handleSlider = (event, newRating) => {
     if (newRating === 4) {
@@ -285,7 +291,7 @@ export default function Home() {
       .attr("cy", event.y);
     console.log("dragA");
   });
-var dragger2 = d3.drag()
+  var dragger2 = d3.drag()
   .on("drag", (event, d) => {
     d3.select("#pointB")
       .attr("cx", event.x)
@@ -296,14 +302,34 @@ var dragger2 = d3.drag()
       .attr("cy", event.y);
     console.log("dragB");
   });
+  var draggerA = d3.drag()
+  .on("drag", (event, d) => {
+    let cx = d3.select("#radiusA").attr("cx");
+    let cy = d3.select("#radiusA").attr("cy");
+    let newrad = Math.sqrt(Math.pow(event.x - cx,2) + Math.pow(event.y - cy,2));
+    d3.select("#radiusA")
+      .attr("r", newrad);
+    setRadiusA(newrad);
+  });
+  var draggerB = d3.drag()
+  .on("drag", (event, d) => {
+    let cx = d3.select("#radiusB").attr("cx");
+    let cy = d3.select("#radiusB").attr("cy");
+    let newrad = Math.sqrt(Math.pow(event.x - cx,2) + Math.pow(event.y - cy,2));
+    d3.select("#radiusB")
+      .attr("r", newrad);
+    setRadiusB(newrad);
+  });
+
+
 
   const svg = useRef();
   useEffect(() => {
-    drawMap(svg, filterButton, rating, locA, locB, dragger, dragger2);
+    drawMap(svg, filterButton, rating, locA, locB, radiusA, radiusB, dragger, dragger2, draggerA, draggerB);
   }, [rating]);
   useEffect(() => {
-    updateMap(svg, locA, locB);
-  }, [locA, locB])
+    updateMap(svg, locA, locB, radiusA, radiusB);
+  }, [locA, locB, radiusA, radiusB])
 
   // const handleFilter = () => {
   //   console.log("button pressed");
