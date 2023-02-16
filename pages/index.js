@@ -23,10 +23,10 @@ function updateMap(svgRef, locA, locB) {
     let distA = Math.sqrt(Math.pow(cx[0] - A[0],2) + Math.pow(cx[1] - A[1],2));
     let distB = Math.sqrt(Math.pow(cx[0] - B[0],2) + Math.pow(cx[1] - B[1],2));
     if (distA < radiusA && distB < radiusB) {
-      return 'red';
+      return 'black';
     }
     else {
-      return 'black';
+      return 'grey';
     }
   }
 
@@ -74,10 +74,10 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
     let distA = Math.sqrt(Math.pow(cx[0] - A[0],2) + Math.pow(cx[1] - A[1],2));
     let distB = Math.sqrt(Math.pow(cx[0] - B[0],2) + Math.pow(cx[1] - B[1],2));
     if (distA < 400 && distB < 400) {
-      return 'red';
+      return 'black';
     }
     else {
-      return 'black';
+      return 'grey';
     }
   }
 
@@ -189,7 +189,7 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
         .attr("id", "radiusA")
         .attr("fill", "none")
         .attr("stroke", "black")
-        .attr("stroke-width", "3")
+        .attr("stroke-width", "2.5")
         .style("z-index", -1)
         .call(draggerA);
       const radiusB = svg.append("circle")
@@ -200,7 +200,7 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
         .attr("id", "radiusB")
         .attr("fill", "none")
         .attr("stroke", "black")
-        .attr("stroke-width", "3")
+        .attr("stroke-width", "2.5")
         .style("z-index", -1)
         .call(draggerB);
 
