@@ -42,8 +42,8 @@ function updateMap(svgRef, locA, locB) {
 }
 
 function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, dragger2, draggerA, draggerB) {
-  let width = 1200;
-  let height = 1200;
+  let width = 900;
+  let height = 800;
   if (filterButton === true) {
     d3.selectAll("svg").remove();
   }
@@ -86,7 +86,7 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
   d3.json('/Bay_Area.json')
     .then((data) => {
       //Binding data and creating one path per GeoJSON feature
-      svg.selectAll("path")
+      svg.append("g").selectAll("path")
         .data(data.features)
         .enter()
         .append("path")
@@ -145,6 +145,8 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
             })
             .attr("r", 1)
             .attr("class", "thedata")
+            .attr("stroke", "white")
+            .attr("stroke-width", 0)
             .style("fill", (d) => {
               let idx = parseCoord(d.coordinates);
               let long = d.coordinates.slice(idx + 1);
@@ -153,7 +155,9 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
               return inBothCircle(cx[0], cx[1]);
             })
             .attr("fill-opacity", 0.6)
-            .on("mouseover", (data, event) => {
+            .on("mouseover", function(d) {
+              d3.select(this).attr("r", 2);
+              d3.select(this).attr("stroke-width", 1);
               return tooltip.style("visibility", "visible");
             })
             .on("mousemove", (event, data) => {
@@ -164,7 +168,9 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
                   + "<br><br>" + "Rating:" + data.rating
                   + "<br><br>" + "Cuisine:" + data.categories);
             })
-            .on("mouseleave", (data, event) => {
+            .on("mouseleave", function(d) {
+              d3.select(this).attr("r", 1);
+              d3.select(this).attr("stroke-width", 0);
               return tooltip.style("visibility", "hidden");
             }),
           update => update,
@@ -232,10 +238,10 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
 export default function Home() {
   const [filterButton, setFilterButton] = useState(true);
   const [rating, setRating] = useState("");
-  const [locA, setLocA] = useState([600,600]);
-  const [locB, setLocB] = useState([594,594]);
-  const [radiusA, setRadiusA] = useState(400);
-  const [radiusB, setRadiusB] = useState(400);
+  const [locA, setLocA] = useState([450,400]);
+  const [locB, setLocB] = useState([440,390]);
+  const [radiusA, setRadiusA] = useState(300);
+  const [radiusB, setRadiusB] = useState(300);
 
   const handleSlider = (event, newRating) => {
     if (newRating === 4) {
@@ -353,7 +359,7 @@ export default function Home() {
         </h1>
 
         <p className={styles.description}>
-          pls where is my <code>map</code>
+          Filter by Yelp star average!
         </p>
 
         <Box sx={{ width: 300 }}>
