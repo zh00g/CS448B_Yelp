@@ -358,6 +358,13 @@ export default function Home() {
           Yelp Viz!
         </h1>
 
+        <p >
+          Drag circles by colored center to move, and adjust radius by dragging the edge.
+        </p>
+        <p >
+          Hover over a point to see restaurant metadata!
+        </p>
+
         <p className={styles.description}>
           Filter by Yelp star average!
         </p>
