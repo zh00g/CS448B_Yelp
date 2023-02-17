@@ -60,7 +60,6 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
   var center = [-122.1430, 37.4419];
   var scale = 30000;
   var offset = [width / 2, height / 2];
-  console.log("center", center)
   var projection = d3.geoMercator().center(center).scale(scale)
     .translate(offset);
   path = path.projection(projection);
@@ -73,7 +72,7 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
     let B = locB;   
     let distA = Math.sqrt(Math.pow(cx[0] - A[0],2) + Math.pow(cx[1] - A[1],2));
     let distB = Math.sqrt(Math.pow(cx[0] - B[0],2) + Math.pow(cx[1] - B[1],2));
-    if (distA < 400 && distB < 400) {
+    if (distA < radA && distB < radB) {
       return 'black';
     }
     else {
@@ -86,7 +85,6 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
 
   d3.json('/Bay_Area.json')
     .then((data) => {
-      console.log("json", data);
       //Binding data and creating one path per GeoJSON feature
       svg.selectAll("path")
         .data(data.features)
@@ -95,7 +93,6 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
         .attr("d", path)
         .attr("stroke", "dimgray")
         .attr('fill', 'lightsteelblue');
-      console.log("svg3?", svg);
     })
     .catch((err) => {
       console.log("error");
@@ -104,7 +101,6 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
   d3.csv('/asst3_yelp.csv')
     .then((data) => {
       if (rating) {
-        console.log("button true");
         data = data.filter(function (d) {
           return (d.rating === rating)
         })
@@ -156,7 +152,6 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
               let cx = projection([+long, +lat]);
               return inBothCircle(cx[0], cx[1]);
             })
-            .attr("stroke-width", 1)
             .attr("fill-opacity", 0.6)
             .on("mouseover", (data, event) => {
               return tooltip.style("visibility", "visible");
@@ -176,6 +171,7 @@ function drawMap(svgRef, filterButton, rating, locA, locB, radA, radB, dragger, 
           // Add code to customize how countries exit the scene.
           // Idea: use transition to fade out to transparent and shrink to zero size before removal
           exit => exit.transition()
+            .duration(1000)
             .attr('r', d => 0)
             .attr('opacity', 0)
             .remove()
@@ -257,9 +253,16 @@ export default function Home() {
     else if (newRating === 5) {
       setRating("5.0")
     }
+    else if (newRating === 2.5) {
+      setRating("")
+    }
   };
 
   const marks = [
+    {
+      value: "2.5",
+      label: 'No filter',
+    },
     {
       value: "3.0",
       label: '3.0',
@@ -291,7 +294,6 @@ export default function Home() {
     d3.select("#radiusA")
       .attr("cx", event.x)
       .attr("cy", event.y);
-    console.log("dragA");
   });
   var dragger2 = d3.drag()
   .on("drag", (event, d) => {
@@ -302,7 +304,6 @@ export default function Home() {
     d3.select("#radiusB")
       .attr("cx", event.x)
       .attr("cy", event.y);
-    console.log("dragB");
   });
   var draggerA = d3.drag()
   .on("drag", (event, d) => {
@@ -324,14 +325,14 @@ export default function Home() {
   });
 
 
-
   const svg = useRef();
   useEffect(() => {
     drawMap(svg, filterButton, rating, locA, locB, radiusA, radiusB, dragger, dragger2, draggerA, draggerB);
   }, [rating]);
   useEffect(() => {
     updateMap(svg, locA, locB, radiusA, radiusB);
-  }, [locA, locB, radiusA, radiusB])
+  }, [locA, locB, radiusA, radiusB, rating])
+  
 
   // const handleFilter = () => {
   //   console.log("button pressed");
@@ -358,7 +359,7 @@ export default function Home() {
         <Box sx={{ width: 300 }}>
           <Slider
             aria-label="Custom marks"
-            min={3.0}
+            min={2.5}
             onChange={handleSlider}
             step={0.5}
             max={5.0}
